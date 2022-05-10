@@ -22,9 +22,15 @@ public class RemoveLastCommand implements ICommand {
         LinkedList<Worker> WorkersData = transporter.getWorkersData();
 
         try {
-            WorkersData.removeLast();
-            transporter.setWorkersData(WorkersData);
-            transporter.setMsg("Command completed.");
+            if(!WorkersData.getLast().getLogin().equals(transporter.getLogin()) || !WorkersData.getLast().getPassword().equals(transporter.getPassword())) {
+                WorkersData.removeLast();
+                transporter.setWorkersData(WorkersData);
+                transporter.setMsg("Command completed.");
+            }
+            else{
+                transporter.setMsg("You do not have access to this file.");
+                return transporter;
+            }
         }catch (NoSuchElementException e){
             System.out.println("Коллекция пуста.");
         }

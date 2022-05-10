@@ -35,9 +35,14 @@ public class RemoveIdCommand implements ICommand {
 
         for(Worker worker : WorkersData){
             if(worker.getId() == id){
-                WorkersData.remove(worker);
-                transporter.setWorkersData(WorkersData);
-                transporter.setMsg("Command completed.");
+                if(worker.getLogin().equals(transporter.getLogin()) || worker.getPassword().equals(transporter.getPassword())) {
+                    WorkersData.remove(worker);
+                    transporter.setWorkersData(WorkersData);
+                    transporter.setMsg("Command completed.");
+                }
+                else {
+                    transporter.setMsg("You do not have access to this file.");
+                }
                 return transporter;
             }
         }

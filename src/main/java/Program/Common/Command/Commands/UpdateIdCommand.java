@@ -29,6 +29,7 @@ public class UpdateIdCommand implements ICommand {
 
     @Override
     public InnerServerTransporter handle(InnerServerTransporter transporter) {
+
         String[] data = transporter.getArgs().replaceAll(",", "").split(" ");
         LinkedList<Worker> WorkerData = transporter.getWorkersData();
 
@@ -38,6 +39,11 @@ public class UpdateIdCommand implements ICommand {
                 worker = w;
                 WorkerData.remove(w);
             }
+        }
+
+        if(!worker.getLogin().equals(transporter.getLogin()) || !worker.getPassword().equals(transporter.getPassword())){
+            transporter.setMsg("You do not have access to this file.");
+            return transporter;
         }
 
         if(worker == null) {

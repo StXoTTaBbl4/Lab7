@@ -17,7 +17,9 @@ public class ClearCommand implements ICommand {
 
     @Override
     public InnerServerTransporter handle(InnerServerTransporter transporter) {
-        transporter.setWorkersData(new LinkedList<>());
+        LinkedList<Worker> workers = transporter.getWorkersData();
+        workers.removeIf(w -> (w.getLogin().equals(transporter.getLogin()) || w.getPassword().equals(transporter.getPassword())));
+
         return transporter;
     }
 
@@ -28,6 +30,6 @@ public class ClearCommand implements ICommand {
 
     @Override
     public String getHelp() {
-        return "Clears the collection.";
+        return "Clears spec. user files in the collection.";
     }
 }

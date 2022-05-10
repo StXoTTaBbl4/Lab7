@@ -36,8 +36,8 @@ public class AddCommand implements ICommand {
     @Override
     public InnerServerTransporter handle(InnerServerTransporter transporter) {
 
-        String tmpLogin = "tmpLogin";
-        String tmpPassword = "tmpPassword";
+        String Login = transporter.getLogin();
+        String Password = transporter.getPassword();
 
         LinkedList<Worker> WorkerData = transporter.getWorkersData();
         String args = transporter.getArgs();
@@ -136,8 +136,8 @@ public class AddCommand implements ICommand {
         PersonCreator personCreator = createNewPerson(userData[8], userData[9], userData[10], userData[11], userData[12], person);
 
         if (person != null) {
-            worker = new Worker(tmpLogin,
-                    tmpLogin,
+            worker = new Worker(Login,
+                    Password,
                     id,
                     name,
                     coordinates,

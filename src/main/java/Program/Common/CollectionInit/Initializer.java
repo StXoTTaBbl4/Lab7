@@ -72,7 +72,6 @@ public class Initializer {
                 LocalDate startDate = LDparser(rs.getString("start_date").split("-"));
 
                 LocalDateTime endDate = LDTparser(rs.getString("end_date"));
-
                 Position position = null;
                 try{
                     position = Position.valueOf(rs.getString("w_position"));

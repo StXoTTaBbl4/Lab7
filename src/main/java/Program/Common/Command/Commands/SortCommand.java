@@ -26,7 +26,7 @@ public class SortCommand implements ICommand {
             transporter.setWorkersData(WorkersData);
             transporter.setMsg("Command completed.");
         }catch (NullPointerException e){
-            transporter.setMsg("Sorting error, checking the fields Coordinates, Person, Salary. They must not be null.");
+            transporter.setMsg("Sorting error, check fields Coordinates, Person, Salary. They must not be null.");
         }
 
         return transporter;

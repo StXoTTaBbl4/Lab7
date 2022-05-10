@@ -37,6 +37,8 @@ public class Person {
         return passportID;
     }
 
+    public LocalDateTime getBirthday() {return birthday;}
+
     public void setBirthday(LocalDateTime birthday) {
         this.birthday = birthday;
     }
