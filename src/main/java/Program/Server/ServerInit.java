@@ -119,59 +119,62 @@ public class ServerInit {
             try {
                 s = reader.readLine();
                 if (s.equals("save") && !functionAdded){
-                    try {
-                        Statement statement = getC().createStatement();
-                        statement.executeUpdate(function);
-                        functionAdded = true;
-                    }catch (SQLException e){
-                        PrintStream printStream = new PrintStream(System.out, true, "UTF-8");
-                        printStream.println(e);
-                        System.out.println("Function add error in ServerInit or already exists");
-                    }
 
                     LinkedList<Worker> toTable = getWorkersData();
                     String sql = null;
                     for(Worker w : WorkersData){
-                        String login = w.getLogin();
-                        String password = w.getPassword();
-                        String name = w.getName();
+                        String login ="'"+ w.getLogin()+"'";
+                        String password ="'"+ w.getPassword()+"'";
+                        String name ="'"+ w.getName()+"'";
                         String x = String.valueOf(w.getCoordinates().getX());
                         String y = String.valueOf(w.getCoordinates().getY());
-                        String creation_date = String.valueOf(w.getCreationDate()).replace("T"," ");
+
+                        String cd_raw = String.valueOf(w.getCreationDate()).replace("T"," ");
+                        int in1 = cd_raw.indexOf("+");
+                        String creation_date ="'"+ cd_raw.substring(0,19) + cd_raw.substring(in1,in1+3)+"'";
+
                         String salary = String.valueOf(w.getSalary());
-                        String start_date = String.valueOf(w.getStartDate());
-                        String end_date = String.valueOf(w.getEndDate()).replace("T", " ");
-                        String position = String.valueOf(w.getPosition());
-                        String birthday = String.valueOf(w.getPerson().getBirthday()).replace("T"," ");
+                        String start_date ="'"+ w.getStartDate() +"'";
+                        String end_date = "'"+String.valueOf(w.getEndDate()).replace("T", " ")+"'";
+                        String position = "'"+ w.getPosition() +"'";
+                        String birthday = "'"+String.valueOf(w.getPerson().getBirthday()).replace("T"," ")+"'";
                         String height = String.valueOf(w.getPerson().getHeight());
                         String weight = String.valueOf(w.getPerson().getWeight());
-                        String passportID = w.getPerson().getPassportID();
-                        String req = "select merge_db(" +
-                                login + ", " +
-                                password + ", " +
-                                "default, " +
-                                name + ", " +
-                                x + ", " +
-                                y + ", " +
-                                creation_date + ", " +
-                                salary + ", " +
-                                start_date + ", " +
-                                end_date + ", " +
-                                position + ", " +
-                                birthday + ", " +
-                                height + ", " +
-                                weight + ", " +
-                                passportID  + ")";
+                        String passportID = "'"+w.getPerson().getPassportID()+"'";
 
-                        System.out.println(req);
 
                         Statement statement;
                         try {
-                            boolean z = getC().prepareStatement(req).execute();
+                            String request = "UPDATE workers SET  name =" + name + ", x =" +x+", y ="+ y+", salary =" +salary+", start_date ="+ start_date+", end_date ="+ end_date+", position ="+ position+", birthday ="+ birthday+", height ="+ height+", weight ="+ weight+", passport_id ="+ passportID +"  WHERE (id ="+ w.getId() +"and login ="+ login+"and password ="+ password+");";
+                            System.out.println(request);
+                            boolean z = getC().prepareStatement(request).execute();
                         } catch (SQLException e) {
+                            String req = "(" +
+                                    "'" + login +"'" + ", " +
+                                    "'"+password+"'" + ", " +
+                                    "default, " +
+                                    "'"+name+"'" + ", " +
+                                    x + ", " +
+                                    y + ", " +
+                                    "'"+creation_date+"'" + ", " +
+                                    salary + ", " +
+                                    "'"+start_date+"'" + ", " +
+                                    "'"+end_date+"'" + ", " +
+                                    "'"+position+"'" + ", " +
+                                    "'"+birthday+"'" + ", " +
+                                    height + ", " +
+                                    weight + ", " +
+                                    "'"+passportID+"');";
+                            System.out.println("insert into workers values"+req);
                             PrintStream printStream = new PrintStream(System.out, true, "UTF-8");
                             printStream.println(e);
-                            System.out.println("У " + w.getId() + "не заданы все поля.");
+                            String request = "insert into workers values"+req;
+                            try {
+                                boolean z = getC().prepareStatement(request).execute();
+                            } catch (SQLException ex) {
+                                System.out.println("У " + w.getId() + " не заданы все поля.");
+                            }
+
                         }
                     }
                 }
@@ -205,66 +208,6 @@ public class ServerInit {
 
     private Connection getC() {return c;}
 
-    final static private String function = "CREATE FUNCTION merge_db(t_login text,    \n" +
-            "             t_password text,    \n" +
-            "             t_id int,    \n" +
-            "             t_name     text,    \n" +
-            "             t_x         real,    \n" +
-            "             t_y double precision,    \n" +
-            "             t_creation_date timestamp with time zone,    \n" +
-            "             t_salary real,    \n" +
-            "             t_start_date date,    \n" +
-            "             t_end_date timestamp,    \n" +
-            "             t_position text,    \n" +
-            "             t_birthday timestamp,    \n" +
-            "             t_height int,    \n" +
-            "             t_weight real,    \n" +
-            "             t_passport_id text ) RETURNS VOID AS    \n" +
-            "         $$    \n" +
-            "         BEGIN    \n" +
-            "             LOOP    \n" +
-            "                 UPDATE workers SET  name = t_name, x = t_x, y = t_y, salary = t_salary, start_date = t_start_date, end_date = t_end_date, position = t_position, birthday = t_birthday, height = t_height, weight = t_weight, passport_id = t_passport_id  WHERE id = t_id, login = t_login, password = t_password;\n" +
-            "                 IF found THEN    \n" +
-            "                     RETURN;    \n" +
-            "                 END IF;    \n" +
-            "             \n" +
-            "                 BEGIN    \n" +
-            "                     INSERT INTO workers(login,\n" +
-            "\t\t\t\t\t\t\t\t\t\t password,\n" +
-            "\t\t\t\t\t\t\t\t\t\t id,\n" +
-            "\t\t\t\t\t\t\t\t\t\t name,\n" +
-            "\t\t\t\t\t\t\t\t\t\t x,\n" +
-            "\t\t\t\t\t\t\t\t\t\t y,\n" +
-            "\t\t\t\t\t\t\t\t\t\t creation_date,\n" +
-            "\t\t\t\t\t\t\t\t\t\t salary,\n" +
-            "\t\t\t\t\t\t\t\t\t\t start_date,\n" +
-            "\t\t\t\t\t\t\t\t\t\t end_date,\n" +
-            "\t\t\t\t\t\t\t\t\t\t position,\n" +
-            "\t\t\t\t\t\t\t\t\t\t birthday,\n" +
-            "\t\t\t\t\t\t\t\t\t\t height,\n" +
-            "\t\t\t\t\t\t\t\t\t\t weight,\n" +
-            "\t\t\t\t\t\t\t\t\t\t passport_id) VALUES (t_login,    \n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\tt_password,    \n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\tt_id,    \n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\tt_name,    \n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\tt_x,    \n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\tt_y,    \n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\tt_creation_date,\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\tt_salary,    \n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\tt_start_date,  \n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\tt_end_date,    \n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\tt_position,    \n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\tt_birthday,    \n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\tt_height,    \n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\tt_weight,    \n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\tt_passport_id);" +
-            "                     RETURN;    \n" +
-            "                 EXCEPTION WHEN unique_violation THEN    \n" +
-            "                 END;    \n" +
-            "             END LOOP;    \n" +
-            "         END;    \n" +
-            "         $$    \n" +
-            "         LANGUAGE plpgsql; \n";
 
     public String getSHA512Encode(String passwordToHash){
         try {

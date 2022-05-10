@@ -35,7 +35,7 @@ public class RemoveIdCommand implements ICommand {
 
         for(Worker worker : WorkersData){
             if(worker.getId() == id){
-                if(worker.getLogin().equals(transporter.getLogin()) || worker.getPassword().equals(transporter.getPassword())) {
+                if(worker.getLogin().equals(transporter.getLogin()) && worker.getPassword().equals(transporter.getPassword())) {
                     WorkersData.remove(worker);
                     transporter.setWorkersData(WorkersData);
                     transporter.setMsg("Command completed.");

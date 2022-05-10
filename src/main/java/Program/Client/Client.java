@@ -48,9 +48,10 @@ public class Client {
             System.out.println("Password: ");
             String password = reader.readLine();
             transporter.setPassword(password);
-
-            if (command.equals("exit"))
-                System.exit(0);
+            try {
+                if (command.equals("exit"))
+                    System.exit(0);
+            }catch (NullPointerException ignored){}
 
             if(isServerOnline(port)) {
                 if (manager.validate(transporter)) {

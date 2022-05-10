@@ -4,12 +4,14 @@ import Program.Common.DataClasses.Coordinates;
 import Program.Common.DataClasses.Person;
 import Program.Common.DataClasses.Position;
 import Program.Common.DataClasses.Worker;
+import org.postgresql.util.PSQLException;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.*;
+import java.util.Collections;
 import java.util.LinkedList;
 //1033424
 /**
@@ -98,9 +100,9 @@ public class Initializer {
             rs.close();
         }catch (SQLException e){
             String sql = "create table workers(" +
-                    "login text unique," +
+                    "login text," +
                     "password text," +
-                    "id serial primary key," +
+                    "id serial primary key unique," +
                     "name text not null," +
                     "x real not null," +
                     "y double precision not null," +
@@ -108,8 +110,7 @@ public class Initializer {
                     "salary real not null check(salary >0)," +
                     "start_date date not null," +
                     "end_date timestamp default null," +
-                    "w_position text default null," +
-                    "position text" +
+                    "position text default null," +
                     "birthday timestamp default null," +
                     "height int check(height >0)," +
                     "weight real check(weight >0 or weight = null)," +
@@ -118,12 +119,11 @@ public class Initializer {
                 Statement statement = c.createStatement();
                 statement.executeUpdate(sql);
                 statement.close();
-                c.close();
             }catch (SQLException ex){
                 System.out.println("Database creation fail.");
             }
         }
-
+        Collections.sort(WorkersData);
         return WorkersData;
     }
     private ZonedDateTime ZDTparser(String zdt){
