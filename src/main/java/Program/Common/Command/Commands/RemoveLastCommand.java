@@ -1,9 +1,11 @@
 package Program.Common.Command.Commands;
 
 import Program.Common.Command.ICommand;
+import Program.Common.Communicator;
 import Program.Common.DataClasses.Worker;
 import Program.Server.InnerServerTransporter;
 
+import java.sql.Connection;
 import java.util.LinkedList;
 import java.util.NoSuchElementException;
 
@@ -11,6 +13,15 @@ import java.util.NoSuchElementException;
  * Удаляет последний элемент из коллекции.
  */
 public class RemoveLastCommand implements ICommand {
+    private Connection connection;
+
+    public RemoveLastCommand() {
+    }
+
+    public RemoveLastCommand(Connection connection) {
+        this.connection = connection;
+    }
+
     @Override
     public Boolean inputValidate(String args) {
         return true;
@@ -23,6 +34,8 @@ public class RemoveLastCommand implements ICommand {
 
         try {
             if(!WorkersData.getLast().getLogin().equals(transporter.getLogin()) || !WorkersData.getLast().getPassword().equals(transporter.getPassword())) {
+                Communicator communicator = new Communicator();
+                communicator.delete_db(connection,WorkersData.getLast());
                 WorkersData.removeLast();
                 transporter.setWorkersData(WorkersData);
                 transporter.setMsg("Command completed.");

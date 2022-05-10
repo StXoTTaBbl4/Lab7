@@ -1,12 +1,14 @@
 package Program.Common.Command.Commands;
 
 import Program.Common.Command.ICommand;
+import Program.Common.Communicator;
 import Program.Common.DataClasses.Coordinates;
 import Program.Common.DataClasses.Person;
 import Program.Common.DataClasses.Position;
 import Program.Common.DataClasses.Worker;
 import Program.Server.InnerServerTransporter;
 
+import java.sql.Connection;
 import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -17,6 +19,12 @@ import java.util.LinkedList;
  */
 public class UpdateIdCommand implements ICommand {
 
+    private Connection connection;
+    public UpdateIdCommand(Connection connection) {
+        this.connection = connection;
+    }
+
+    public UpdateIdCommand() {}
 
     @Override
     public Boolean inputValidate(String args) {
@@ -32,15 +40,17 @@ public class UpdateIdCommand implements ICommand {
 
         String[] data = transporter.getArgs().replaceAll(",", "").split(" ");
         LinkedList<Worker> WorkerData = transporter.getWorkersData();
+        int id = Integer.parseInt(data[0]);
 
         Worker worker = null;
         for (Worker w: WorkerData) {
-            if(w.getId() == Integer.parseInt(data[0])) {
+            if(w.getId() == id) {
                 worker = w;
                 WorkerData.remove(w);
             }
         }
 
+        assert worker != null;
         if(!worker.getLogin().equals(transporter.getLogin()) || !worker.getPassword().equals(transporter.getPassword())){
             transporter.setMsg("You do not have access to this file.");
             return transporter;
@@ -197,8 +207,17 @@ public class UpdateIdCommand implements ICommand {
                     break;
             }
             WorkerData.add(worker);
-            transporter.setMsg("Command completed.");
-            transporter.setWorkersData(WorkerData);
+            LinkedList<Worker> w = new LinkedList<>();
+            w.add(worker);
+            Communicator communicator = new Communicator();
+            boolean k = communicator.merge_db(connection,w);
+            if(k) {
+                transporter.setMsg("Command completed.");
+                transporter.setWorkersData(WorkerData);
+            }else {
+                transporter.setMsg("Failed to add to DB.");
+                return transporter;
+            }
         }
         return transporter;
     }

@@ -35,9 +35,9 @@ public class CommandManager {
      * @param c Связь с БД.
      */
     public CommandManager(Connection c){
-        addCommand(new AddCommand());
-        addCommand(new AddIfMaxCommand(this));
-        addCommand(new ClearCommand());
+        addCommand(new AddCommand(c));
+        addCommand(new AddIfMaxCommand(this,c));
+        addCommand(new ClearCommand(c));
         addCommand(new CountGtpCommand());
         addCommand(new ExecuteScriptCommand(this));
         addCommand(new ExitCommand());
@@ -45,12 +45,12 @@ public class CommandManager {
         addCommand(new GroupCbsCommand());
         addCommand(new HelpCommand(this));
         //addCommand(new InfoCommand(path));
-        addCommand(new RemoveIdCommand());
-        addCommand(new RemoveLastCommand());
+        addCommand(new RemoveIdCommand(c));
+        addCommand(new RemoveLastCommand(c));
         //addCommand(new SaveCommand());
         addCommand(new ShowCommand());
         addCommand(new SortCommand());
-        addCommand(new UpdateIdCommand());
+        addCommand(new UpdateIdCommand(c));
         this.connection = c;
     }
 
@@ -60,7 +60,7 @@ public class CommandManager {
      */
     public CommandManager(){
         addCommand(new AddCommand());
-        addCommand(new AddIfMaxCommand(this));
+        addCommand(new AddIfMaxCommand());
         addCommand(new ClearCommand());
         addCommand(new CountGtpCommand());
         addCommand(new ExecuteScriptCommand(this));

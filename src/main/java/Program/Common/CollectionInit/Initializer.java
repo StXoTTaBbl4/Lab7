@@ -4,7 +4,6 @@ import Program.Common.DataClasses.Coordinates;
 import Program.Common.DataClasses.Person;
 import Program.Common.DataClasses.Position;
 import Program.Common.DataClasses.Worker;
-import org.postgresql.util.PSQLException;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -15,7 +14,7 @@ import java.util.Collections;
 import java.util.LinkedList;
 //1033424
 /**
- * Класс, используемый для инициализации коллеккции и проверке ее элементов при запуске программы.
+ * Класс, используемый для инициализации коллекции и проверке ее элементов при запуске программы.
  */
 public class Initializer {
 
@@ -54,7 +53,7 @@ public class Initializer {
      */
     public LinkedList<Worker> initializeCollection(Connection c){
         LinkedList<Worker> WorkersData = new LinkedList<>();
-        Statement stmt = null;
+        Statement stmt;
 
         try {
             stmt = c.createStatement();
@@ -94,7 +93,6 @@ public class Initializer {
                         endDate,
                         position,
                         new Person(birthday, height, weight, passportID));
-                System.out.println(worker.toString());
                 WorkersData.add(worker);
             }
             rs.close();

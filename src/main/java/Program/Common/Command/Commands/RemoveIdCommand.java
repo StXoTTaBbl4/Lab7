@@ -1,15 +1,26 @@
 package Program.Common.Command.Commands;
 
 import Program.Common.Command.ICommand;
+import Program.Common.Communicator;
 import Program.Common.DataClasses.Worker;
 import Program.Server.InnerServerTransporter;
 
+import java.sql.Connection;
 import java.util.LinkedList;
 
 /**
  * Удаляет элемент из коллекции по его id.
  */
 public class RemoveIdCommand implements ICommand {
+    private Connection connection;
+
+    public RemoveIdCommand(Connection connection) {
+        this.connection = connection;
+    }
+
+    public RemoveIdCommand() {
+    }
+
     @Override
     public Boolean inputValidate(String args) {
         try{
@@ -33,9 +44,11 @@ public class RemoveIdCommand implements ICommand {
             return transporter;
         }
 
+        Communicator communicator = new Communicator();
         for(Worker worker : WorkersData){
             if(worker.getId() == id){
                 if(worker.getLogin().equals(transporter.getLogin()) && worker.getPassword().equals(transporter.getPassword())) {
+                    communicator.delete_db(connection,worker);
                     WorkersData.remove(worker);
                     transporter.setWorkersData(WorkersData);
                     transporter.setMsg("Command completed.");

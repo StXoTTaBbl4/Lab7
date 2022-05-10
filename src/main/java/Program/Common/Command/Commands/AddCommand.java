@@ -1,13 +1,12 @@
 package Program.Common.Command.Commands;
 
 import Program.Common.Command.ICommand;
-import Program.Common.DataClasses.Coordinates;
-import Program.Common.DataClasses.Person;
-import Program.Common.DataClasses.Position;
-import Program.Common.DataClasses.Worker;
+import Program.Common.Communicator;
+import Program.Common.DataClasses.*;
 import Program.Server.InnerServerTransporter;
 
 import java.io.IOException;
+import java.sql.Connection;
 import java.time.*;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -18,6 +17,13 @@ import java.util.function.Consumer;
  * Добавляет новый элемент в коллекцию.
  */
 public class AddCommand implements ICommand {
+    private Connection connection;
+
+    public AddCommand(Connection connection) {
+        this.connection = connection;
+    }
+
+    public AddCommand() {}
 
     @Override
     public Boolean inputValidate(String args) {
@@ -35,125 +41,23 @@ public class AddCommand implements ICommand {
 
     @Override
     public InnerServerTransporter handle(InnerServerTransporter transporter) {
-
-        String Login = transporter.getLogin();
-        String Password = transporter.getPassword();
-
-        LinkedList<Worker> WorkerData = transporter.getWorkersData();
-        String args = transporter.getArgs();
-
-        Collections.sort(WorkerData);
-        String[] userData = args.split(",");
-
-        Consumer<String[]> consumer = userData1 -> {
-            for (int i = 0; i < userData1.length; i++) {
-                userData1[i] = userData1[i].trim();
-            }
-        };
-        consumer.accept(userData);
-
-        if (userData.length < 13) {
-            transporter.setMsg("Not all options are specified.");
-            return transporter;
-        }
-
-        Worker worker;
-        Integer id;
-        String name;
-        Coordinates coordinates;
-        Float salary;
-        LocalDate startDate;
-        LocalDateTime endDate = null;
-        Position position = null;
-        Person person = new Person();
-
-        try {
-            id = WorkerData.getLast().getId() + 1;
-        } catch (NoSuchElementException e) {
-            id = 1;
-        }
-
-
-        name = userData[0];
-        if (name.equals("\"\"")) {
-            transporter.setMsg("The name field cannot be empty.");
-            return transporter;
-        }
-
-        try {
-            Float x = Float.parseFloat(userData[1]);
-            Double y = Double.parseDouble(userData[2]);
-            coordinates = new Coordinates(x, y);
-        } catch (NumberFormatException e) {
-            transporter.setMsg("Datatype error for Coordinates(x/y). Fields cannot be null.");
-            return transporter;
-        }
-
-        try {
-            salary = Float.parseFloat(userData[3]);
-        } catch (NumberFormatException e) {
-            transporter.setMsg("Salary field data type error. The field cannot be null.");
-            return transporter;
-        }
-
-        try {
-            String[] stData = userData[4].split("-");
-            startDate = LocalDate.of(Integer.parseInt(stData[0]),
-                    Integer.parseInt(stData[1]),
-                    Integer.parseInt(stData[2]));
-        } catch (DateTimeException | NumberFormatException e) {
-            transporter.setMsg("Error in startDate data, example: 2000-10-15. Field cannot be null");
-            return transporter;
-        }
-
-        try {
-            String s = userData[5];
-            if (!s.equals("\"\"")) {
-                String[] ed = userData[5].split("-");
-                String[] et = userData[6].split(":");
-                endDate = LocalDateTime.of(Integer.parseInt(ed[0]),
-                        Integer.parseInt(ed[1]),
-                        Integer.parseInt(ed[2]),
-                        Integer.parseInt(et[0]),
-                        Integer.parseInt(et[1]));
-            }
-        } catch (DateTimeException | NumberFormatException e) {
-            transporter.setMsg("Error in endDate data, example: 2000-10-15.");
-            return transporter;
-        }
-
-        try {
-            String pos;
-            pos = userData[7];
-
-            if (!pos.equals("\"\""))
-                position = Position.valueOf(pos);
-        } catch (IllegalArgumentException e) {
-            transporter.setMsg("Incorrect position data. Example: MANAGER.");
-            return transporter;
-        }
-
-        PersonCreator personCreator = createNewPerson(userData[8], userData[9], userData[10], userData[11], userData[12], person);
-
-        if (person != null) {
-            worker = new Worker(Login,
-                    Password,
-                    id,
-                    name,
-                    coordinates,
-                    ZonedDateTime.now(),
-                    salary,
-                    startDate,
-                    endDate,
-                    position,
-                    personCreator.getPerson());
-
-            WorkerData.add(worker);
-            transporter.setWorkersData(WorkerData);
-            transporter.setMsg("Command completed.");
-        } else {
-            transporter.setMsg(personCreator.getMsg());
-        }
+        //сохранить основную коллекцию
+        LinkedList<Worker> buff = transporter.getWorkersData();
+        //обнулить текущую
+        transporter.setWorkersData(new LinkedList<>());
+        //создать новый элемент
+        transporter = createNewWorker(transporter);
+        //сохранить новый элемент в бд
+        Communicator communicator = new Communicator();
+        LinkedList<Worker> toUpload = new LinkedList<>();
+        toUpload.add(transporter.getWorkersData().getFirst());
+        boolean k = communicator.merge_db(connection,toUpload);
+        //добавить новый элемент в коллекцию и обновить главную коллекцию
+        if(k) {
+            buff.add(transporter.getWorkersData().getFirst());
+            transporter.setWorkersData(buff);
+        }else
+            transporter.setWorkersData(buff);
         return transporter;
     }
 
@@ -226,6 +130,128 @@ public class AddCommand implements ICommand {
                 personCreator.setMsg("");
 
             return personCreator;
+        }
+
+        public InnerServerTransporter createNewWorker(InnerServerTransporter transporter){
+            String Login = transporter.getLogin();
+            String Password = transporter.getPassword();
+
+            LinkedList<Worker> WorkerData = transporter.getWorkersData();
+            String args = transporter.getArgs();
+
+            Collections.sort(WorkerData);
+            String[] userData = args.split(",");
+
+            Consumer<String[]> consumer = userData1 -> {
+                for (int i = 0; i < userData1.length; i++) {
+                    userData1[i] = userData1[i].trim();
+                }
+            };
+            consumer.accept(userData);
+
+            if (userData.length < 13) {
+                transporter.setMsg("Not all options are specified.");
+                return transporter;
+            }
+
+            Worker worker = null;
+            Integer id;
+            String name;
+            Coordinates coordinates;
+            Float salary;
+            LocalDate startDate;
+            LocalDateTime endDate = null;
+            Position position = null;
+            Person person = new Person();
+
+            try {
+                id = WorkerData.getLast().getId() + 1;
+            } catch (NoSuchElementException e) {
+                id = 1;
+            }
+
+
+            name = userData[0];
+            if (name.equals("\"\"")) {
+                transporter.setMsg("The name field cannot be empty.");
+                return transporter;
+            }
+
+            try {
+                Float x = Float.parseFloat(userData[1]);
+                Double y = Double.parseDouble(userData[2]);
+                coordinates = new Coordinates(x, y);
+            } catch (NumberFormatException e) {
+                transporter.setMsg("Datatype error for Coordinates(x/y). Fields cannot be null.");
+                return transporter;
+            }
+
+            try {
+                salary = Float.parseFloat(userData[3]);
+            } catch (NumberFormatException e) {
+                transporter.setMsg("Salary field data type error. The field cannot be null.");
+                return transporter;
+            }
+
+            try {
+                String[] stData = userData[4].split("-");
+                startDate = LocalDate.of(Integer.parseInt(stData[0]),
+                        Integer.parseInt(stData[1]),
+                        Integer.parseInt(stData[2]));
+            } catch (DateTimeException | NumberFormatException e) {
+                transporter.setMsg("Error in startDate data, example: 2000-10-15. Field cannot be null");
+                return transporter;
+            }
+
+            try {
+                String s = userData[5];
+                if (!s.equals("\"\"")) {
+                    String[] ed = userData[5].split("-");
+                    String[] et = userData[6].split(":");
+                    endDate = LocalDateTime.of(Integer.parseInt(ed[0]),
+                            Integer.parseInt(ed[1]),
+                            Integer.parseInt(ed[2]),
+                            Integer.parseInt(et[0]),
+                            Integer.parseInt(et[1]));
+                }
+            } catch (DateTimeException | NumberFormatException e) {
+                transporter.setMsg("Error in endDate data, example: 2000-10-15.");
+                return transporter;
+            }
+
+            try {
+                String pos;
+                pos = userData[7];
+
+                if (!pos.equals("\"\""))
+                    position = Position.valueOf(pos);
+            } catch (IllegalArgumentException e) {
+                transporter.setMsg("Incorrect position data. Example: MANAGER.");
+                return transporter;
+            }
+
+            PersonCreator personCreator = createNewPerson(userData[8], userData[9], userData[10], userData[11], userData[12], person);
+
+            if (person != null) {
+                worker = new Worker(Login,
+                        Password,
+                        id,
+                        name,
+                        coordinates,
+                        ZonedDateTime.now(),
+                        salary,
+                        startDate,
+                        endDate,
+                        position,
+                        personCreator.getPerson());
+
+                WorkerData.add(worker);
+                transporter.setWorkersData(WorkerData);
+                transporter.setMsg("Command completed.");
+            } else {
+                transporter.setMsg(personCreator.getMsg());
+            }
+            return transporter;
         }
 
         public static class PersonCreator{
