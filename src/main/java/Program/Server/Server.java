@@ -3,6 +3,7 @@ package Program.Server;
 /**
  * Класс для запуска сервера и его консоли {@link ServerInit#initialize()}, {@link ServerInit#consoleMonitor()}.
  */
+@Deprecated
 public class Server {
     public static void main(String[] args){
         ServerInit server;

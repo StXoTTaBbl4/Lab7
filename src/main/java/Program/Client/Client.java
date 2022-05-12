@@ -39,8 +39,10 @@ public class Client {
 
         while (true) {
             //Ожидаем ввод сообщения серверу
-            System.out.println("Request : ");
+            System.out.println("Request: ");
             String command = reader.readLine();
+            if (command.equals("exit"))
+                System.exit(0);
             transporter.setCommand(command);
             System.out.println("Login: ");
             String login = reader.readLine();
@@ -48,10 +50,6 @@ public class Client {
             System.out.println("Password: ");
             String password = reader.readLine();
             transporter.setPassword(password);
-            try {
-                if (command.equals("exit"))
-                    System.exit(0);
-            }catch (NullPointerException ignored){}
 
             if(isServerOnline(port)) {
                 if (manager.validate(transporter)) {
