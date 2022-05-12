@@ -44,9 +44,11 @@ public class Client {
             if (command.equals("exit"))
                 System.exit(0);
             transporter.setCommand(command);
+            
             System.out.println("Login: ");
             String login = reader.readLine();
             transporter.setLogin(login);
+            
             System.out.println("Password: ");
             String password = reader.readLine();
             transporter.setPassword(password);
@@ -89,9 +91,9 @@ public class Client {
             return true;
         } finally {
             if(ds != null)
-            ds.close();
+                ds.close();
             if(ss != null)
-            ss.close();
+                ss.close();
         }
     }
 
