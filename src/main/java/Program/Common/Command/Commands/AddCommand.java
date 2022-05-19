@@ -156,6 +156,7 @@ public class AddCommand implements ICommand {
             }
 
             Worker worker = null;
+
             Integer id;
             String name;
             Coordinates coordinates;
