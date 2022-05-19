@@ -85,6 +85,7 @@ public class ServerInit {
         InnerServerTransporter innerTransporter = new InnerServerTransporter();
         //DatagramPacket incoming = new DatagramPacket(buffer, buffer.length);
         DatagramPacket incoming = null;
+        ExecutorService executor = Executors.newCachedThreadPool();
 
         System.out.println("Server started, port: " + socket.getLocalPort());
         while(true) {
@@ -110,8 +111,8 @@ public class ServerInit {
                 //setWorkersData(innerTransporter.getWorkersData());
 
                 //Отправляем данные клиенту
-                ExecutorService executor = Executors.newCachedThreadPool();
-                executor.submit(new PackForChannel(transporter,socket,innerTransporter,incoming,serializer,manager,data));
+                packForChannel = new PackForChannel(transporter,socket,innerTransporter,incoming,serializer,manager,data);
+                executor.submit(this::newResponse);
 
             }catch (SocketException e){
                 transporter.setMessage("A program execution error occurred, message was not generated.");
@@ -131,17 +132,11 @@ public class ServerInit {
     public void consoleMonitor() {
         System.out.println("Console opened.");
         BufferedReader reader =new BufferedReader(new InputStreamReader(System.in));
-        String s;
+        //String s;
         while(true) {
             try {
-                s = reader.readLine();
-              /*  if (s.equals("save")){
-                    Communicator communicator = new Communicator();
-                    communicator.merge_db(getC(),getWorkersData());
-                }
-
-               */
-                if(s.equals("shutdown")){
+                //s = reader.readLine();
+                if(reader.readLine().equals("shutdown")){
                     System.exit(0);
                 }
             } catch (IOException e) {
@@ -158,23 +153,6 @@ public class ServerInit {
 
         executorService.shutdown();
     }
-
-    private LinkedList<Worker> getWorkersData() {
-        return WorkersData;
-    }
-
-    public void setWorkersData(LinkedList<Worker> data) {
-        this.WorkersData = data;
-    }
-
-    private void setC(Connection c) {this.c = c;}
-
-    private Connection getC() {return c;}
-
-    public PackForChannel getPackForChannel() {
-        return packForChannel;
-    }
-
     public String getSHA512Encode(String passwordToHash){
         try {
             MessageDigest md = MessageDigest.getInstance("SHA-512");
@@ -188,6 +166,43 @@ public class ServerInit {
             e.printStackTrace();
         }
         return passwordToHash;
+    }
+
+    private void newResponse(){
+        PackForChannel pack = getPackForChannel();
+        try {
+            pack.innerTransporter = pack.manager.CommandHandler(pack.innerTransporter);
+            setWorkersData(pack.innerTransporter.getWorkersData());
+            pack.transporter.setMessage(pack.innerTransporter.getMsg());
+            //Отправляем данные клиенту
+            pack.data = pack.serializer.serialize(pack.transporter);
+            DatagramPacket dp = new DatagramPacket(pack.data, pack.data.length, pack.incoming.getAddress(), pack.incoming.getPort());
+            pack.socket.send(dp);
+
+        }catch (SocketException e){
+            pack.transporter.setMessage("A program execution error occurred, message was not generated.");
+            byte[] data;
+            try {
+                data = pack.serializer.serialize(pack.transporter);
+                DatagramPacket dp = new DatagramPacket(data, data.length, pack.incoming.getAddress(), pack.incoming.getPort());
+                pack.socket.send(dp);
+
+            } catch (IOException ex) {ex.printStackTrace();}
+        }
+        catch (IOException e){
+            e.printStackTrace();
+        }
+    }
+
+    private LinkedList<Worker> getWorkersData() {return WorkersData;}
+
+    public void setWorkersData(LinkedList<Worker> data) {
+        this.WorkersData = data;
+    }
+    private void setC(Connection c) {this.c = c;}
+
+    public PackForChannel getPackForChannel() {
+        return packForChannel;
     }
 
 }

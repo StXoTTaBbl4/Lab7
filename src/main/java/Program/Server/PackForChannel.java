@@ -4,12 +4,10 @@ import Program.Common.Command.CommandManager;
 import Program.Common.DataClasses.Transporter;
 import Program.Common.Serializer;
 
-import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
-import java.net.SocketException;
 
-public class PackForChannel implements Runnable{
+public class PackForChannel {
     Transporter transporter;
     DatagramSocket socket;
     InnerServerTransporter innerTransporter;
@@ -28,9 +26,8 @@ public class PackForChannel implements Runnable{
         this.data = data;
     }
 
-    @Override
+    /*@Override
     public void run() {
-
         try {
 
             innerTransporter = manager.CommandHandler(innerTransporter);
@@ -38,7 +35,6 @@ public class PackForChannel implements Runnable{
             transporter.setMessage(innerTransporter.getMsg());
             //Отправляем данные клиенту
             data = serializer.serialize(transporter);
-
             DatagramPacket dp = new DatagramPacket(data, data.length, incoming.getAddress(), incoming.getPort());
             socket.send(dp);
 
@@ -55,6 +51,10 @@ public class PackForChannel implements Runnable{
         catch (IOException e){
             e.printStackTrace();
         }
+
+
     }
+
+     */
 
 }

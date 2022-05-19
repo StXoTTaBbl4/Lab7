@@ -52,6 +52,7 @@ public class AddCommand implements ICommand {
         LinkedList<Worker> toUpload = new LinkedList<>();
         toUpload.add(transporter.getWorkersData().getFirst());
         boolean k = communicator.merge_db(connection,toUpload);
+        System.out.println(k);
         //добавить новый элемент в коллекцию и обновить главную коллекцию
         if(k) {
             buff.add(transporter.getWorkersData().getFirst());

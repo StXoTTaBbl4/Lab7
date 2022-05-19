@@ -51,11 +51,6 @@ public class Communicator {
             String passportID = "'"+w.getPerson().getPassportID()+"'";
 
             try {
-                String request = "UPDATE workers SET  name =" + name + ", x =" +x+", y ="+ y+", salary =" +salary+", start_date ="+ start_date+", end_date ="+ end_date+", position ="+ position+", birthday ="+ birthday+", height ="+ height+", weight ="+ weight+", passport_id ="+ passportID +"  WHERE (id ="+ w.getId() +"and login ="+ login+"and password ="+ password+");";
-                System.out.println(request);
-                boolean z;
-                return z = connection.prepareStatement(request).execute();
-            } catch (SQLException e) {
                 String req = "(" +
                         "'" + login +"'" + ", " +
                         "'"+password+"'" + ", " +
@@ -73,6 +68,12 @@ public class Communicator {
                         weight + ", " +
                         "'"+passportID+"');";
                 System.out.println("insert into workers values"+req);
+                String request = "insert into workers values"+req;
+                boolean z;
+                return z = connection.prepareStatement(request).execute();
+            } catch (SQLException e) {
+                String request = "UPDATE workers SET  name =" + name + ", x =" +x+", y ="+ y+", salary =" +salary+", start_date ="+ start_date+", end_date ="+ end_date+", position ="+ position+", birthday ="+ birthday+", height ="+ height+", weight ="+ weight+", passport_id ="+ passportID +"  WHERE (id ="+ w.getId() +"and login ="+ login+"and password ="+ password+");";
+                System.out.println(request);
                 PrintStream printStream = null;
                 try {
                     printStream = new PrintStream(System.out, true, "UTF-8");
@@ -80,7 +81,6 @@ public class Communicator {
                     throw new RuntimeException(ex);
                 }
                 printStream.println(e);
-                String request = "insert into workers values"+req;
                 try {
                     boolean z;
                     return z = connection.prepareStatement(request).execute();
@@ -95,7 +95,7 @@ public class Communicator {
     public void delete_db(Connection connection, Worker w){
             String login ="'"+ w.getLogin()+"'";
             String password ="'"+ w.getPassword()+"'";
-            String req = "delete from Products where (login =" + login + "and password =" + password + " and id=" + w.getId() + " );";
+            String req = "delete from workers where (login =" + login + "and password =" + password + " and id=" + w.getId() + " );";
             try {
                 boolean z = connection.prepareStatement(req).execute();
             } catch (SQLException ex) {
