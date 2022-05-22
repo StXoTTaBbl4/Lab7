@@ -29,7 +29,6 @@ public class Communicator {
     }
 
     public boolean merge_db(Connection connection, LinkedList<Worker> WorkersData){
-        String sql = null;
         for(Worker w : WorkersData){
             String login ="'"+ w.getLogin()+"'";
             String password ="'"+ w.getPassword()+"'";
@@ -52,29 +51,29 @@ public class Communicator {
 
             try {
                 String req = "(" +
-                        "'" + login +"'" + ", " +
-                        "'"+password+"'" + ", " +
+                        login + ", " +
+                        password+ ", " +
                         "default, " +
-                        "'"+name+"'" + ", " +
+                        name+ ", " +
                         x + ", " +
                         y + ", " +
-                        "'"+creation_date+"'" + ", " +
+                        creation_date + ", " +
                         salary + ", " +
-                        "'"+start_date+"'" + ", " +
-                        "'"+end_date+"'" + ", " +
-                        "'"+position+"'" + ", " +
-                        "'"+birthday+"'" + ", " +
+                        start_date + ", " +
+                        end_date+ ", " +
+                        position+ ", " +
+                        birthday + ", " +
                         height + ", " +
                         weight + ", " +
-                        "'"+passportID+"');";
+                        passportID+");";
                 System.out.println("insert into workers values"+req);
                 String request = "insert into workers values"+req;
-                boolean z;
-                return z = connection.prepareStatement(request).execute();
+                connection.prepareStatement(request).executeUpdate();
+                    return true;
             } catch (SQLException e) {
                 String request = "UPDATE workers SET  name =" + name + ", x =" +x+", y ="+ y+", salary =" +salary+", start_date ="+ start_date+", end_date ="+ end_date+", position ="+ position+", birthday ="+ birthday+", height ="+ height+", weight ="+ weight+", passport_id ="+ passportID +"  WHERE (id ="+ w.getId() +"and login ="+ login+"and password ="+ password+");";
                 System.out.println(request);
-                PrintStream printStream = null;
+                PrintStream printStream;
                 try {
                     printStream = new PrintStream(System.out, true, "UTF-8");
                 } catch (UnsupportedEncodingException ex) {
@@ -82,10 +81,11 @@ public class Communicator {
                 }
                 printStream.println(e);
                 try {
-                    boolean z;
-                    return z = connection.prepareStatement(request).execute();
+                    connection.prepareStatement(request).execute();
+                    return true;
                 } catch (SQLException ex) {
                     System.out.println("У " + w.getId() + " не заданы все поля.");
+                    return false;
                 }
             }
         }
@@ -97,7 +97,7 @@ public class Communicator {
             String password ="'"+ w.getPassword()+"'";
             String req = "delete from workers where (login =" + login + "and password =" + password + " and id=" + w.getId() + " );";
             try {
-                boolean z = connection.prepareStatement(req).execute();
+                connection.prepareStatement(req).execute();
             } catch (SQLException ex) {
                 System.out.println("Delete id: "+w.getId()+" failed.");
             }

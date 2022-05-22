@@ -98,7 +98,7 @@ public class Initializer {
             rs.close();
         }catch (SQLException e){
             String sql = "create table workers(" +
-                    "login text," +
+                    "login text unique," +
                     "password text," +
                     "id serial primary key unique," +
                     "name text not null," +
@@ -112,7 +112,8 @@ public class Initializer {
                     "birthday timestamp default null," +
                     "height int check(height >0)," +
                     "weight real check(weight >0 or weight = null)," +
-                    "passport_id text check(length(passport_id) > 3 and length(passport_id) < 30) not null);";
+                    "passport_id text check(length(passport_id) > 3 and length(passport_id) < 30) not null);" +
+                    "isBlocked boolean default false";
             try {
                 Statement statement = c.createStatement();
                 statement.executeUpdate(sql);

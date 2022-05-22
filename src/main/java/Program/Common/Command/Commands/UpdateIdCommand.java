@@ -9,6 +9,8 @@ import Program.Common.DataClasses.Worker;
 import Program.Server.InnerServerTransporter;
 
 import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -39,8 +41,14 @@ public class UpdateIdCommand implements ICommand {
     public InnerServerTransporter handle(InnerServerTransporter transporter) {
 
         String[] data = transporter.getArgs().replaceAll(",", "").split(" ");
-        LinkedList<Worker> WorkerData = transporter.getWorkersData();
-        int id = Integer.parseInt(data[0]);
+        LinkedList<Worker> WorkerData = new LinkedList<>(transporter.getWorkersData());
+        int id;
+        try{
+             id= Integer.parseInt(data[0]);
+        }catch (NumberFormatException e){
+            transporter.setMsg("ID must be Int");
+            return transporter;
+        }
 
         Worker worker = null;
         for (Worker w: WorkerData) {
@@ -50,16 +58,30 @@ public class UpdateIdCommand implements ICommand {
             }
         }
 
-        assert worker != null;
-        if(!worker.getLogin().equals(transporter.getLogin()) || !worker.getPassword().equals(transporter.getPassword())){
-            transporter.setMsg("You do not have access to this file.");
-            return transporter;
-        }
 
         if(worker == null) {
             transporter.setMsg("No worker with this ID was found.");
+            return transporter;
+        }else if(!worker.getLogin().equals(transporter.getLogin()) || !worker.getPassword().equals(transporter.getPassword())){
+            transporter.setMsg("You do not have access to this file.");
+            return transporter;
         }
         else {
+            try {
+                ResultSet res = connection.prepareStatement("select * from workers where login = '"+transporter.getLogin()+"'").executeQuery();
+                boolean z = false;
+                while (res.next()){
+                    z = res.getBoolean("isBlocked");
+                }
+                if(!z)
+                    connection.prepareStatement("update workers set isBlocked = true where login = '"+transporter.getLogin()+"'").executeUpdate();
+                else
+                    throw new SQLException();
+            } catch (SQLException e) {
+                transporter.setMsg("Error while trying to update data or file already in use.");
+                return transporter;
+            }
+
             switch (data[1]){
                 case "name":
                     try {
@@ -211,12 +233,16 @@ public class UpdateIdCommand implements ICommand {
             w.add(worker);
             Communicator communicator = new Communicator();
             boolean k = communicator.merge_db(connection,w);
+            try {
+                connection.prepareStatement("update workers set isBlocked = false where login = '"+transporter.getLogin()+"'").executeUpdate();
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
             if(k) {
                 transporter.setMsg("Command completed.");
                 transporter.setWorkersData(WorkerData);
             }else {
                 transporter.setMsg("Failed to add to DB.");
-                return transporter;
             }
         }
         return transporter;

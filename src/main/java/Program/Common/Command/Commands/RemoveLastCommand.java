@@ -6,6 +6,7 @@ import Program.Common.DataClasses.Worker;
 import Program.Server.InnerServerTransporter;
 
 import java.sql.Connection;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.NoSuchElementException;
 
@@ -35,6 +36,7 @@ public class RemoveLastCommand implements ICommand {
         try {
             if(!WorkersData.getLast().getLogin().equals(transporter.getLogin()) || !WorkersData.getLast().getPassword().equals(transporter.getPassword())) {
                 Communicator communicator = new Communicator();
+                Collections.sort(WorkersData);
                 communicator.delete_db(connection,WorkersData.getLast());
                 WorkersData.removeLast();
                 transporter.setWorkersData(WorkersData);

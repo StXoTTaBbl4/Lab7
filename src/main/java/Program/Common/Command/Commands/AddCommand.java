@@ -7,6 +7,8 @@ import Program.Server.InnerServerTransporter;
 
 import java.io.IOException;
 import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.time.*;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -18,11 +20,9 @@ import java.util.function.Consumer;
  */
 public class AddCommand implements ICommand {
     private Connection connection;
-
     public AddCommand(Connection connection) {
         this.connection = connection;
     }
-
     public AddCommand() {}
 
     @Override
@@ -41,20 +41,54 @@ public class AddCommand implements ICommand {
 
     @Override
     public InnerServerTransporter handle(InnerServerTransporter transporter) {
+
+        String req = "select * from workers where login = '"+transporter.getLogin()+"'";
+        ResultSet res;
+        try {
+            res = connection.prepareStatement(req).executeQuery();
+
+            String name = null;
+            while(res.next()) {
+                name = res.getString("name");
+            }
+            if(name != null) {
+                transporter.setMsg("File with this login is already exist, id = " + res.getInt("id"));
+                return transporter;
+            }
+        }catch (SQLException e) {
+            transporter.setMsg("SQLException in add command");
+            return transporter;
+        }
+
+        transporter.setMsg("def");
         //сохранить основную коллекцию
-        LinkedList<Worker> buff = transporter.getWorkersData();
+        LinkedList<Worker> buff = new LinkedList<>(transporter.getWorkersData());
         //обнулить текущую
         transporter.setWorkersData(new LinkedList<>());
         //создать новый элемент
         transporter = createNewWorker(transporter);
         //сохранить новый элемент в бд
         Communicator communicator = new Communicator();
-        LinkedList<Worker> toUpload = new LinkedList<>();
-        toUpload.add(transporter.getWorkersData().getFirst());
-        boolean k = communicator.merge_db(connection,toUpload);
+
+        boolean k = communicator.merge_db(connection,transporter.getWorkersData());
         System.out.println(k);
         //добавить новый элемент в коллекцию и обновить главную коллекцию
-        if(k) {
+        if(!transporter.getMsg().equals("def")){
+            transporter.setWorkersData(buff);
+            return transporter;
+        }
+        else if(k) {
+            try {
+                res = connection.prepareStatement("select * from workers order by id desc").executeQuery();
+                int id = -1;
+                while(res.next()) {
+                    if (res.getInt("id") > id)
+                        id = res.getInt("id");
+                }
+                transporter.getWorkersData().getFirst().setId(id);
+            }catch (SQLException e){
+                transporter.setMsg("ID definition error in add command.");
+            }
             buff.add(transporter.getWorkersData().getFirst());
             transporter.setWorkersData(buff);
         }else
@@ -155,7 +189,7 @@ public class AddCommand implements ICommand {
                 return transporter;
             }
 
-            Worker worker = null;
+            Worker worker;
 
             Integer id;
             String name;
@@ -249,7 +283,7 @@ public class AddCommand implements ICommand {
 
                 WorkerData.add(worker);
                 transporter.setWorkersData(WorkerData);
-                transporter.setMsg("Command completed.");
+                transporter.setMsg("def");
             } else {
                 transporter.setMsg(personCreator.getMsg());
             }

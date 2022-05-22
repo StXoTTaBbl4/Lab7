@@ -3,15 +3,11 @@ package Program.Common.Command;
 import Program.Common.Command.Commands.*;
 import Program.Common.Command.Commands.AddIfMax.AddIfMaxCommand;
 import Program.Common.DataClasses.Transporter;
-import Program.Common.DataClasses.Worker;
 import Program.Server.InnerServerTransporter;
 
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -20,7 +16,6 @@ import java.util.List;
 public class CommandManager {
 
     private final List<ICommand> commands = new ArrayList<>();
-    private Connection connection = null;
 
     /**
      * @return Список доступных команд.
@@ -37,10 +32,10 @@ public class CommandManager {
     public CommandManager(Connection c){
         addCommand(new AddCommand(c));
         addCommand(new AddIfMaxCommand(this,c));
-        addCommand(new ClearCommand(c));
+        //addCommand(new ClearCommand(c));
         addCommand(new CountGtpCommand());
         addCommand(new ExecuteScriptCommand(this));
-        addCommand(new ExitCommand());
+        //addCommand(new ExitCommand());
         addCommand(new FilterGtsCommand());
         addCommand(new GroupCbsCommand());
         addCommand(new HelpCommand(this));
@@ -51,7 +46,6 @@ public class CommandManager {
         addCommand(new ShowCommand());
         addCommand(new SortCommand());
         addCommand(new UpdateIdCommand(c));
-        this.connection = c;
     }
 
     /**
@@ -61,17 +55,17 @@ public class CommandManager {
     public CommandManager(){
         addCommand(new AddCommand());
         addCommand(new AddIfMaxCommand());
-        addCommand(new ClearCommand());
+        //addCommand(new ClearCommand());
         addCommand(new CountGtpCommand());
         addCommand(new ExecuteScriptCommand(this));
-        addCommand(new ExitCommand());
+        //addCommand(new ExitCommand());
         addCommand(new FilterGtsCommand());
         addCommand(new GroupCbsCommand());
         addCommand(new HelpCommand(this));
-        addCommand(new InfoCommand());
+        //addCommand(new InfoCommand());
         addCommand(new RemoveIdCommand());
         addCommand(new RemoveLastCommand());
-        addCommand(new SaveCommand());
+        //addCommand(new SaveCommand());
         addCommand(new ShowCommand());
         addCommand(new SortCommand());
         addCommand(new UpdateIdCommand());
@@ -127,7 +121,7 @@ public class CommandManager {
 
     /**
      * @param t Объект класса {@link Transporter}, содержащий данные от пользователя(команда + аргументы).
-     * @return true, если команда соотвествует минимальным требованиям объекта класса-команды для выполнения.
+     * @return true, если команда соответствует минимальным требованиям объекта класса-команды для выполнения.
      */
     public Boolean validate(Transporter t){
         String[] data = t.getCommand().split(" ");

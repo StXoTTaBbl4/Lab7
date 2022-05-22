@@ -17,8 +17,10 @@ import java.sql.SQLException;
 import java.util.LinkedList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class ServerInit {
+
     private LinkedList<Worker> WorkersData;
     private int port;
     private String ip;
@@ -86,6 +88,7 @@ public class ServerInit {
         //DatagramPacket incoming = new DatagramPacket(buffer, buffer.length);
         DatagramPacket incoming = null;
         ExecutorService executor = Executors.newCachedThreadPool();
+        ReentrantLock lock = new ReentrantLock();
 
         System.out.println("Server started, port: " + socket.getLocalPort());
         while(true) {
@@ -111,7 +114,8 @@ public class ServerInit {
                 //setWorkersData(innerTransporter.getWorkersData());
 
                 //Отправляем данные клиенту
-                packForChannel = new PackForChannel(transporter,socket,innerTransporter,incoming,serializer,manager,data);
+
+                packForChannel = new PackForChannel(transporter,socket,innerTransporter,incoming,serializer,manager,data,lock);
                 executor.submit(this::newResponse);
 
             }catch (SocketException e){
@@ -172,15 +176,20 @@ public class ServerInit {
         PackForChannel pack = getPackForChannel();
         try {
             pack.innerTransporter = pack.manager.CommandHandler(pack.innerTransporter);
-            setWorkersData(pack.innerTransporter.getWorkersData());
+
             pack.transporter.setMessage(pack.innerTransporter.getMsg());
             //Отправляем данные клиенту
             pack.data = pack.serializer.serialize(pack.transporter);
             DatagramPacket dp = new DatagramPacket(pack.data, pack.data.length, pack.incoming.getAddress(), pack.incoming.getPort());
             pack.socket.send(dp);
 
+            pack.locker.lock();
+            setWorkersData(pack.innerTransporter.getWorkersData());
+            pack.locker.unlock();
+
         }catch (SocketException e){
             pack.transporter.setMessage("A program execution error occurred, message was not generated.");
+            e.printStackTrace();
             byte[] data;
             try {
                 data = pack.serializer.serialize(pack.transporter);
@@ -192,9 +201,8 @@ public class ServerInit {
         catch (IOException e){
             e.printStackTrace();
         }
-    }
 
-    private LinkedList<Worker> getWorkersData() {return WorkersData;}
+    }
 
     public void setWorkersData(LinkedList<Worker> data) {
         this.WorkersData = data;
