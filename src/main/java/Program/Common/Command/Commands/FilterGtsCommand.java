@@ -40,12 +40,13 @@ public class FilterGtsCommand implements ICommand {
         StringBuilder stringBuilder = new StringBuilder();
         for (Worker w : WorkersData) {
             try {
-                if(w.getSalary() > salary)
+                if(w.getSalary() > salary) {
                     stringBuilder.append(w);
+                    stringBuilder.append("\n");
                 }
-            catch (NullPointerException e){
+            } catch (NullPointerException e){
                 if(w.getSalary() == null)
-                stringBuilder.append("The salary field is not set for id: " + w.getId() +" .\n");
+                    stringBuilder.append("The salary field is not set for id: " + w.getId() +" .\n");
             }
         }
         transporter.setMsg(String.valueOf(stringBuilder));

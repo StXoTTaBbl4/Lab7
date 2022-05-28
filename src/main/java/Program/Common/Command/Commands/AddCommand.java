@@ -6,9 +6,9 @@ import Program.Common.DataClasses.*;
 import Program.Server.InnerServerTransporter;
 
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
+import java.sql.*;
 import java.time.*;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -48,15 +48,24 @@ public class AddCommand implements ICommand {
             res = connection.prepareStatement(req).executeQuery();
 
             String name = null;
+            int id = -1;
             while(res.next()) {
                 name = res.getString("name");
+                id = res.getInt("id");
             }
             if(name != null) {
-                transporter.setMsg("File with this login is already exist, id = " + res.getInt("id"));
+                transporter.setMsg("File with this login is already exist, id = " + id);
                 return transporter;
             }
         }catch (SQLException e) {
             transporter.setMsg("SQLException in add command");
+            PrintStream printStream;
+            try {
+                printStream = new PrintStream(System.out, true, "UTF-8");
+            } catch (UnsupportedEncodingException ex) {
+                throw new RuntimeException(ex);
+            }
+            printStream.println(e);
             return transporter;
         }
 
@@ -79,7 +88,9 @@ public class AddCommand implements ICommand {
         }
         else if(k) {
             try {
-                res = connection.prepareStatement("select * from workers order by id desc").executeQuery();
+                PreparedStatement s = connection.prepareStatement("select * from workers where login = ?");
+                s.setString(1,transporter.getLogin());
+                res = s.executeQuery();
                 int id = -1;
                 while(res.next()) {
                     if (res.getInt("id") > id)
@@ -89,6 +100,7 @@ public class AddCommand implements ICommand {
             }catch (SQLException e){
                 transporter.setMsg("ID definition error in add command.");
             }
+            transporter.setMsg("Command completed.");
             buff.add(transporter.getWorkersData().getFirst());
             transporter.setWorkersData(buff);
         }else

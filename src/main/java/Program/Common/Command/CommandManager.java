@@ -41,7 +41,7 @@ public class CommandManager {
         addCommand(new HelpCommand(this));
         //addCommand(new InfoCommand(path));
         addCommand(new RemoveIdCommand(c));
-        addCommand(new RemoveLastCommand(c));
+        //addCommand(new RemoveLastCommand(c));
         //addCommand(new SaveCommand());
         addCommand(new ShowCommand());
         addCommand(new SortCommand());
@@ -64,7 +64,7 @@ public class CommandManager {
         addCommand(new HelpCommand(this));
         //addCommand(new InfoCommand());
         addCommand(new RemoveIdCommand());
-        addCommand(new RemoveLastCommand());
+        //addCommand(new RemoveLastCommand());
         //addCommand(new SaveCommand());
         addCommand(new ShowCommand());
         addCommand(new SortCommand());

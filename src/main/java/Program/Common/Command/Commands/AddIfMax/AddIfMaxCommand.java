@@ -36,23 +36,21 @@ public class AddIfMaxCommand implements ICommand {
 
         AddIfMaxComparator addIfMaxComparator = new AddIfMaxComparator();
         LinkedList<Worker> WorkersData = transporter.getWorkersData();
-        String args = transporter.getArgs();
 
         Collections.sort(WorkersData);
         LinkedList<Worker> newWorker = new LinkedList<>();
         transporter.setWorkersData(newWorker);
         AddCommand addCommand = new AddCommand();
         Worker worker = addCommand.createNewWorker(transporter).getWorkersData().getLast();
+        newWorker.add(transporter.getWorkersData().getFirst());
 
         Communicator communicator = new Communicator();
-        LinkedList<Worker> toUpload = new LinkedList<>();
-        toUpload.add(worker);
         try{
             worker.setId(WorkersData.getLast().getId()+1);
         }
         catch (NoSuchElementException e){
             worker.setId(1);
-            boolean k = communicator.merge_db(connection,toUpload);
+            boolean k = communicator.merge_db(connection,newWorker);
             if(k) {
                 WorkersData.add(worker);
                 transporter.setWorkersData(WorkersData);
@@ -67,9 +65,11 @@ public class AddIfMaxCommand implements ICommand {
         WorkersData.sort(addIfMaxComparator);
         try {
             if(addIfMaxComparator.compare(worker,WorkersData.getLast()) > 0) {
-                boolean k = communicator.merge_db(connection,toUpload);
-                if(k)
+                boolean k = communicator.merge_db(connection,newWorker);
+                if(k) {
                     WorkersData.add(worker);
+                    transporter.setMsg("Command completed, file added.");
+                }
                 else{
                     transporter.setMsg("Failed to add to DB.");
                     return transporter;
@@ -81,7 +81,7 @@ public class AddIfMaxCommand implements ICommand {
             transporter.setMsg("Список пуст, не с чем сравнивать.");
             return transporter;
         }
-
+        transporter.setMsg("File was not added, not max.");
         return transporter;
     }
 

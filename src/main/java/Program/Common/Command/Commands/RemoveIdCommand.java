@@ -48,10 +48,14 @@ public class RemoveIdCommand implements ICommand {
         for(Worker worker : WorkersData){
             if(worker.getId() == id){
                 if(worker.getLogin().equals(transporter.getLogin()) && worker.getPassword().equals(transporter.getPassword())) {
-                    communicator.delete_db(connection,worker);
-                    WorkersData.remove(worker);
-                    transporter.setWorkersData(WorkersData);
-                    transporter.setMsg("Command completed.");
+                    boolean k = communicator.delete_db(connection,worker);
+                    if(k) {
+                        WorkersData.remove(worker);
+                        transporter.setWorkersData(WorkersData);
+                        transporter.setMsg("Command completed.");
+                    }else{
+                        transporter.setMsg("Delete: failed.");
+                    }
                 }
                 else {
                     transporter.setMsg("You do not have access to this file.");

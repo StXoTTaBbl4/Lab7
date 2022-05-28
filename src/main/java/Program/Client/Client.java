@@ -9,7 +9,7 @@ import java.io.*;
 import java.net.*;
 
 /**
- * Класс, объекты которого являются "клиентами" серверов. На его стороне не происходит непосредственного взаимодействия с коллекцией.
+ * Класс, объекты которого являются "клиентами" серверов. На его стороне не происходит непосредственного взаимодействия с коллекцией и бд.
  */
 public class Client {
 
@@ -23,10 +23,10 @@ public class Client {
         String ip = null;
         int port = -1;
         try {
-            //ip = args[0];
-            //port = Integer.parseInt(args[1]);
-            ip = "localhost";
-            port = 56666;
+            ip = args[0];
+            port = Integer.parseInt(args[1]);
+            //ip = "localhost";
+            //port = 56666;
         } catch (ArrayIndexOutOfBoundsException e) {
             System.out.println("Input: ip port(int)");
             System.exit(0);

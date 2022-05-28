@@ -232,12 +232,12 @@ public class UpdateIdCommand implements ICommand {
             LinkedList<Worker> w = new LinkedList<>();
             w.add(worker);
             Communicator communicator = new Communicator();
-            boolean k = communicator.merge_db(connection,w);
             try {
                 connection.prepareStatement("update workers set isBlocked = false where login = '"+transporter.getLogin()+"'").executeUpdate();
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
+            boolean k = communicator.merge_db(connection,w);
             if(k) {
                 transporter.setMsg("Command completed.");
                 transporter.setWorkersData(WorkerData);

@@ -71,7 +71,7 @@ public class GroupCbsCommand implements ICommand {
 
     private String printData(float leftBorder, float rightBorder, LinkedList<Worker> WorkersData){
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("Зарплата от ").append(leftBorder).append(" до ").append(rightBorder);
+        stringBuilder.append("Зарплата от ").append(leftBorder).append(" до ").append(rightBorder).append(": ");
 
         long k = WorkersData.stream().filter(w -> w.getSalary() >= leftBorder && w.getSalary() <= rightBorder).count();
         stringBuilder.append(k).append("\n");

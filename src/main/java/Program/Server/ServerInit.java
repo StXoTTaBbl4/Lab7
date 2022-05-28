@@ -24,20 +24,28 @@ public class ServerInit {
     private LinkedList<Worker> WorkersData;
     private int port;
     private String ip;
+    private String url;
+    private String login;
+    private String password;
     private Connection c;
     private PackForChannel packForChannel;
 
-    public ServerInit(int port, String ip) {
+    public ServerInit(int port, String ip,String url, String login, String password) {
         this.port = port;
         this.ip = ip;
+        this.url = url;
+        this.login = login;
+        this.password = password;
     }
     public ServerInit(){}
 
     public static void main(String[] args){
+        System.out.println("Input ex: 56666 localhost jdbc:postgresql://pg:5432/studs login password");
         ServerInit server;
         try {
             //server = new ServerInit();
-            server = new ServerInit(56666,"localhost");
+            //server = new ServerInit(56666,"localhost","jdbc:postgresql://localhost:5432/Lab7", "postgres", "Ltvjys1");
+            server = new ServerInit(Integer.parseInt(args[0]),args[1],args[2],args[3],args[4]);
             server.execute();
         }catch (NumberFormatException e){
             System.out.println("port: Integer");
@@ -47,11 +55,14 @@ public class ServerInit {
 
     }
 
+    /**
+     * Метод для получения запросов от клиентов.
+     */
     public void initialize() {
         
         Connection connection = null;
         try{
-            connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/Lab7", "postgres", "Ltvjys1");
+            connection = DriverManager.getConnection(url, login, password);
             setC(connection);
         }catch (SQLException e){
             System.out.println("Failed to connect to database");
@@ -111,8 +122,6 @@ public class ServerInit {
                 else
                     innerTransporter.setPassword(transporter.getPassword());
 
-                //setWorkersData(innerTransporter.getWorkersData());
-
                 //Отправляем данные клиенту
 
                 packForChannel = new PackForChannel(transporter,socket,innerTransporter,incoming,serializer,manager,data,lock);
@@ -133,6 +142,10 @@ public class ServerInit {
         }
 
     }
+
+    /**
+     * Консоль сервера.
+     */
     public void consoleMonitor() {
         System.out.println("Console opened.");
         BufferedReader reader =new BufferedReader(new InputStreamReader(System.in));
@@ -157,6 +170,12 @@ public class ServerInit {
 
         executorService.shutdown();
     }
+
+    /**
+     * Метод для шифровки пароля
+     * @param passwordToHash пароль для шифровки.
+     * @return зашифрованный через SHA512 пароль.
+     */
     public String getSHA512Encode(String passwordToHash){
         try {
             MessageDigest md = MessageDigest.getInstance("SHA-512");
@@ -172,9 +191,13 @@ public class ServerInit {
         return passwordToHash;
     }
 
+    /**
+     * Метод для ответа сервера пользователю.
+     */
     private void newResponse(){
         PackForChannel pack = getPackForChannel();
         try {
+            System.out.println(Thread.currentThread().getName());
             pack.innerTransporter = pack.manager.CommandHandler(pack.innerTransporter);
 
             pack.transporter.setMessage(pack.innerTransporter.getMsg());
@@ -185,7 +208,7 @@ public class ServerInit {
 
             pack.locker.lock();
             setWorkersData(pack.innerTransporter.getWorkersData());
-            pack.locker.unlock();
+
 
         }catch (SocketException e){
             pack.transporter.setMessage("A program execution error occurred, message was not generated.");
@@ -201,7 +224,9 @@ public class ServerInit {
         catch (IOException e){
             e.printStackTrace();
         }
-
+        finally {
+            pack.locker.unlock();
+        }
     }
 
     public void setWorkersData(LinkedList<Worker> data) {

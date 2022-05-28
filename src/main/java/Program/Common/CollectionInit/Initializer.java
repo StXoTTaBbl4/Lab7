@@ -5,6 +5,8 @@ import Program.Common.DataClasses.Person;
 import Program.Common.DataClasses.Position;
 import Program.Common.DataClasses.Worker;
 
+import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -47,7 +49,7 @@ public class Initializer {
             System.out.printf("У работника с id: %s некорректно задано поле passportID(3<x<30) \n", worker.getId());
     }
 
-    /** Метод для загрузки коллекции из файла.
+    /** Метод для загрузки коллекции из базы данных.
      * @param c Подключение к конкретной БД.
      * @return Коллекция типа LinkedList.
      */
@@ -97,8 +99,15 @@ public class Initializer {
             }
             rs.close();
         }catch (SQLException e){
+            PrintStream printStream;
+            try {
+                printStream = new PrintStream(System.out, true, "UTF-8");
+            } catch (UnsupportedEncodingException ex) {
+                throw new RuntimeException(ex);
+            }
+            printStream.println(e);
             String sql = "create table workers(" +
-                    "login text unique," +
+                    "login text not null unique," +
                     "password text," +
                     "id serial primary key unique," +
                     "name text not null," +
@@ -112,19 +121,31 @@ public class Initializer {
                     "birthday timestamp default null," +
                     "height int check(height >0)," +
                     "weight real check(weight >0 or weight = null)," +
-                    "passport_id text check(length(passport_id) > 3 and length(passport_id) < 30) not null);" +
-                    "isBlocked boolean default false";
+                    "passport_id text check(length(passport_id) > 3 and length(passport_id) < 30) not null," +
+                    "isBlocked boolean default false);";
             try {
                 Statement statement = c.createStatement();
                 statement.executeUpdate(sql);
                 statement.close();
             }catch (SQLException ex){
+                try {
+                    printStream = new PrintStream(System.out, true, "UTF-8");
+                } catch (UnsupportedEncodingException exx) {
+                    throw new RuntimeException(exx);
+                }
+                printStream.println(ex);
                 System.out.println("Database creation fail.");
             }
         }
         Collections.sort(WorkersData);
         return WorkersData;
     }
+
+    /**
+     * Метод для парсинга ZoneDateTime объектов
+     * @param zdt объект класса {@link ZonedDateTime}
+     * @return  строковое представление объекта.
+     */
     private ZonedDateTime ZDTparser(String zdt){
         String[] s = zdt.split(" ");
         String[] time = s[1].split(":");
@@ -135,10 +156,20 @@ public class Initializer {
         return ZonedDateTime.of(LDparser(s[0].split("-")), LocalTime.of(hour,minute,second), ZoneId.of(time[2].substring(time[2].indexOf("+"))));
     }
 
+    /**
+     * Метод для парсинга LocaleDate объектов
+     * @param ld объект класса {@link LocalDate}
+     * @return строковое представление объекта.
+     */
     private LocalDate LDparser(String[] ld){
         return LocalDate.of(Integer.parseInt(ld[0]), Integer.parseInt(ld[1]), Integer.parseInt(ld[2]));
     }
 
+    /**
+     * Метод для парсинга LocaleDate объектов
+     * @param str объект класса {@link LocalDateTime}
+     * @return строковое представление объекта.
+     */
     private LocalDateTime LDTparser(String str){
         String[] s = str.split(" ");
         String[] time = s[1].split(":");
